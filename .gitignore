@@ -49,3 +49,7 @@ next-env.d.ts
 # Uploaded attachment files
 /uploads/*
 !/uploads/.gitkeep
+
+# Obsidian per-user UI state (keep app/appearance/core-plugins config)
+vault/.obsidian/workspace.json
+vault/.obsidian/graph.json
