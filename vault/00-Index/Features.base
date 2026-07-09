@@ -1,0 +1,26 @@
+filters:
+  and:
+    - type == "feature"
+formulas:
+  status_icon: if(status == "done", "✅", if(status == "in-progress", "🔄", "⬜"))
+properties:
+  formula.status_icon:
+    displayName: " "
+  status:
+    displayName: Status
+  phase:
+    displayName: Phase
+  area:
+    displayName: Area
+views:
+  - type: table
+    name: Features
+    groupBy:
+      property: status
+      direction: ASC
+    order:
+      - formula.status_icon
+      - file.name
+      - status
+      - phase
+      - area
