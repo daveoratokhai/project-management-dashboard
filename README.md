@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Project Dashboard
 
-## Getting Started
+An internal project management dashboard. Browse projects in a filterable table, open a rich detail view per project (status, assignees, timeline, tags, description, attachments, and a task list with both List and Kanban views), and edit everything inline.
 
-First, run the development server:
+Built with Next.js (App Router), TypeScript, Tailwind CSS v4, Prisma + SQLite, and shadcn/ui.
+
+## Features
+
+- Projects table with technology and status filters plus column toggles
+- Create, edit, and delete projects with the full field set (name, team, tech, status, repository, dates, tags, assignees, description)
+- Per-project detail view: editable status, assignees, start/end dates, tags, and description
+- Attachments: upload (stored on local disk), download, and delete
+- Task list with two views: a List and a Kanban board (drag a card to change its status; both views stay in sync)
+- Light / Dark theme toggle (follows the OS on first load, then remembers your choice)
+- Persistence via Prisma + SQLite
+
+## Tech stack
+
+- Next.js 16 (App Router, Turbopack), React 19, TypeScript
+- Tailwind CSS v4, shadcn/ui, Radix UI, lucide-react, framer-motion
+- Prisma 6 ORM with SQLite
+- dnd-kit (Kanban drag and drop), next-themes (theming)
+
+## Getting started
+
+### Prerequisites
+
+- Node.js 20 or newer (developed on Node 24)
+
+### Setup
 
 ```bash
+# 1. Install dependencies
+npm install
+
+# 2. Create your environment file
+cp .env.example .env
+
+# 3. Create the database and generate the Prisma client
+npx prisma migrate dev
+
+# 4. (Optional) Seed sample people and projects
+node prisma/seed.mjs
+
+# 5. Start the dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 (the root redirects to `/projects`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `npm run dev` — start the development server
+- `npm run build` — production build
+- `npm run start` — run the production build
+- `npm run lint` — run ESLint
+- `node prisma/seed.mjs` — seed sample data (idempotent; skips if projects already exist)
 
-## Learn More
+## Project structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/app          Routes: projects list, project detail, and API routes
+src/components    Feature components; src/components/ui holds shadcn primitives
+src/lib           Shared helpers (projects vocabulary, Prisma client, uploads)
+prisma            Schema, migrations, and seed script
+uploads           Uploaded attachment files (gitignored, created at runtime)
+vault             Obsidian vault: the project's source-of-truth documentation
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Data model
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+A `Project` (tags stored as JSON, dates as strings) has many `ProjectTask`s, many `Attachment`s, and a many-to-many relation to `Person` (assignees). See `prisma/schema.prisma` and `vault/00-Index/Technical Architecture.md` for details.
 
-## Deploy on Vercel
+## Documentation
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Architecture notes, design decisions, and the roadmap live in the Obsidian vault under `vault/`. Open that folder in Obsidian for the full picture: it uses wikilinks, callouts, and a Features base to track the build.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Roadmap
+
+Next up is authentication and roles (PM / Member / Viewer), followed by team deployment (moving SQLite to Postgres) and a WhatsApp / AI intake layer. See `vault/00-Index/Roadmap.md`.
+
+## Notes
+
+- Storage is local for the MVP: SQLite (`prisma/dev.db`) and attachment files on disk (`uploads/`). Both are gitignored; the database is created by `prisma migrate`.
+- There is no authentication yet, so all editing is open. This is intended for a trusted internal environment until the auth phase lands.
