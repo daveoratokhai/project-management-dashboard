@@ -10,7 +10,7 @@ This file orients an AI coding assistant (or a new human contributor) so you can
 
 ## What this is
 
-An internal project management dashboard. Users browse projects in a filterable table, open a rich detail view per project (status, assignees, timeline, tags, description, attachments, and a task list with both List and Kanban views), and edit everything inline. Long-term vision: a WhatsApp-style intake surface that an AI triages into the tracker (not built yet).
+An internal project management dashboard. Users browse projects in a filterable table, open a rich detail view per project (status, assignees, timeline, tags, description, attachments, and a task list with both List and Kanban views), and edit everything inline. Long-term vision: a lightweight note-intake surface that an AI triages into the tracker (not built yet).
 
 ## Current status (where we stopped)
 
@@ -29,7 +29,7 @@ There is NO authentication yet, so all editing is open to anyone. This is intend
 
 1. Authentication and roles (the planned next phase): login + a users table, then roles: PM/Admin (manage projects), Member (edit tasks / status / attachments), Viewer (read-only). Gate the API routes and hide UI actions by role. Link `Person` records to real user accounts. The most destructive action to gate first is project delete.
 2. Team-ready: decide single-user vs shared; if shared, move SQLite to Postgres (change the datasource `provider` and `DATABASE_URL`). Deploy. Consider moving attachments from local disk to cloud storage (S3/R2).
-3. WhatsApp / AI intake: a chat-style intake, then LLM triage of freeform notes into structured records with a human-review step.
+3. AI intake: a lightweight note-capture surface, then LLM triage of freeform notes into structured records with a human-review step.
 
 ## Source of truth: the Obsidian vault
 

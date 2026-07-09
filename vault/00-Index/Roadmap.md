@@ -57,10 +57,9 @@ See [[Authentication & Roles]].
 - [ ] Deploy
 - [ ] Upgrade [[Attachments]] to cloud storage (S3/R2) if needed
 
-## ⬜ Phase 3 — WhatsApp intake
+## ⬜ Phase 3 — Note intake
 
-- [ ] Chat-style intake UI (inbox / intake table)
-- [ ] Decide: real WhatsApp Business API vs lookalike UI
+- [ ] Lightweight note-capture UI (inbox / intake table)
 
 ## ⬜ Phase 4 — AI auto-sort
 

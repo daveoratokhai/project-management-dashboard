@@ -87,8 +87,8 @@ npx prisma migrate dev
 node prisma/seed.mjs
 ```
 
-## Future hooks (WhatsApp / AI layer)
+## Future hooks (AI intake layer)
 
 - Add an intake table (or status) for un-triaged notes.
-- WhatsApp webhook → new API route under `src/app/api/`.
+- Note-capture endpoint → new API route under `src/app/api/`.
 - LLM sort → server-side Claude call that assigns fields; keep a human-review queue. See [[Roadmap]] Phases 3–4.

@@ -34,9 +34,9 @@ Dated decisions and the reasoning behind them. Newest first. Linked from [[Home]
 ## 2026-07-07
 
 > [!note] Build custom instead of buying
-> Notion / Linear / Trello were rejected because the roadmap needs a bespoke WhatsApp + LLM intake pipeline that off-the-shelf tools don't provide cleanly. Accepted as intentional during idea pressure-test.
+> Notion / Linear / Trello were rejected because the roadmap needs a bespoke note-intake + LLM pipeline that off-the-shelf tools don't provide cleanly. Accepted as intentional during idea pressure-test.
 
-- **Stack:** [[Technical Architecture|Next.js 16 (App Router) + TypeScript + Tailwind v4]]. One codebase serves the UI now and API routes for WhatsApp webhooks / LLM calls later.
+- **Stack:** [[Technical Architecture|Next.js 16 (App Router) + TypeScript + Tailwind v4]]. One codebase serves the UI now and API routes for note intake / LLM calls later.
 - **Storage:** SQLite via Prisma for the MVP; portable to Postgres by swapping the datasource provider.
 - **Pinned Prisma to v6.** Prisma 7 dropped `url`-in-schema for driver adapters + `prisma.config.ts`; too much friction for the MVP.
 - **Adopted shadcn/ui** (new-york style, neutral base). Added `components.json`, `cn()`, and the full design-token set. See [[Design & Style]].

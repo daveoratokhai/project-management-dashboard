@@ -77,7 +77,7 @@ Architecture notes, design decisions, and the roadmap live in the Obsidian vault
 
 ## Roadmap
 
-Next up is authentication and roles (PM / Member / Viewer), followed by team deployment (moving SQLite to Postgres) and a WhatsApp / AI intake layer. See `vault/00-Index/Roadmap.md`.
+Next up is authentication and roles (PM / Member / Viewer), followed by team deployment (moving SQLite to Postgres) and an AI note-intake layer. See `vault/00-Index/Roadmap.md`.
 
 ## Notes
 
