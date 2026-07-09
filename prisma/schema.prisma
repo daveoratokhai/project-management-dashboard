@@ -1,0 +1,78 @@
+// Prisma schema for the project management dashboard.
+// SQLite for the MVP. To move to Postgres later, change `provider` to
+// "postgresql" and point DATABASE_URL at a Postgres instance.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// A project shown on the dashboard and its detail page.
+// Notes:
+// - `status` is one of: active | inProgress | onHold (display labels derived in UI).
+// - `tags` is a JSON-encoded array of tag keys (SQLite has no native JSON type,
+//   so it is stored as a String and parsed in code).
+// - `startDate` / `endDate` are stored as "YYYY-MM-DD" strings (or "" if unset)
+//   and formatted for display.
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  repository  String   @default("")
+  team        String   @default("")
+  tech        String   @default("")
+  status      String   @default("active")
+  description String   @default("")
+  startDate   String   @default("")
+  endDate     String   @default("")
+  tags        String   @default("[]")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  assignees   Person[]      @relation("ProjectAssignees")
+  attachments Attachment[]
+  tasks       ProjectTask[]
+}
+
+// A person who can be assigned to projects.
+model Person {
+  id        String    @id @default(cuid())
+  name      String
+  avatarUrl String    @default("")
+  fallback  String    @default("")
+  projects  Project[] @relation("ProjectAssignees")
+}
+
+// An uploaded file belonging to a project. The bytes live on disk under
+// ./uploads; this row holds the metadata.
+model Attachment {
+  id         String   @id @default(cuid())
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  filename   String
+  storedName String
+  size       Int      @default(0)
+  mimeType   String   @default("")
+  createdAt  DateTime @default(now())
+
+  @@index([projectId])
+}
+
+// A row in a project's task list.
+// `status` is one of: Completed | In Progress | Pending.
+model ProjectTask {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title     String
+  category  String   @default("")
+  status    String   @default("Pending")
+  dueDate   String   @default("")
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([projectId, order])
+}
