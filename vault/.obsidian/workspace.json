@@ -110,7 +110,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "01-Features/Project Detail View.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -120,7 +119,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Project Detail View"
+              "title": "Backlinks"
             }
           },
           {
@@ -129,12 +128,11 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "01-Features/Project Detail View.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from Project Detail View"
+              "title": "Outgoing links"
             }
           },
           {
@@ -172,13 +170,12 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "01-Features/Project Detail View.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Project Detail View"
+              "title": "Outline"
             }
           }
         ]
@@ -199,16 +196,17 @@
       "bases:Create new base": false
     }
   },
-  "active": "cae23465b610b81a",
+  "active": "4b050998d5b2741a",
   "lastOpenFiles": [
+    "01-Features/Authentication & Roles.md",
+    "00-Index/Decision Log.md",
+    "00-Index/Roadmap.md",
+    "01-Features/Project Detail View.md",
     "00-Index/Home.md.tmp.16615.0a4c8c7cffc0",
     "01-Features/Theme Toggle.md",
     "01-Features/Attachments.md",
     "00-Index/Features.base",
     "00-Index/Design & Style.md",
-    "00-Index/Decision Log.md",
-    "01-Features/Project Detail View.md",
-    "01-Features/Projects Dashboard.md",
-    "01-Features/Authentication & Roles.md"
+    "01-Features/Projects Dashboard.md"
   ]
 }

@@ -1,48 +1,25 @@
 "use client";
 
-import { Monitor, Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
-const OPTIONS = [
-  { value: "light", label: "Light", icon: Sun },
-  { value: "dark", label: "Dark", icon: Moon },
-  { value: "system", label: "System", icon: Monitor },
-] as const;
-
-// Sun/moon button in the top nav. Offers Light / Dark / System; next-themes
-// persists the choice and applies the `.dark` class before hydration, so
-// there is no flash of the wrong theme.
+// Sun/moon button in the top nav. One click flips between light and dark.
+// Both icons render and CSS shows the one matching the active theme, so there
+// is no flash or hydration mismatch. `resolvedTheme` is defined by the time a
+// click can happen (after mount), so the flip is always correct.
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Toggle theme">
-          {/* Both icons render; CSS shows the one matching the active theme. */}
-          <Sun className="h-4 w-4 dark:hidden" />
-          <Moon className="hidden h-4 w-4 dark:block" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {OPTIONS.map(({ value, label, icon: Icon }) => (
-          <DropdownMenuCheckboxItem
-            key={value}
-            checked={theme === value}
-            onCheckedChange={() => setTheme(value)}
-          >
-            <Icon className="mr-2 h-4 w-4" />
-            {label}
-          </DropdownMenuCheckboxItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Button
+      variant="ghost"
+      size="icon"
+      aria-label="Toggle theme"
+      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+    >
+      <Sun className="h-4 w-4 dark:hidden" />
+      <Moon className="hidden h-4 w-4 dark:block" />
+    </Button>
   );
 }
