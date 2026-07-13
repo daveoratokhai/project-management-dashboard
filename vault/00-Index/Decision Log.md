@@ -9,6 +9,27 @@ updated: 2026-07-09
 
 Dated decisions and the reasoning behind them. Newest first. Linked from [[Home]].
 
+## 2026-07-13
+
+> [!note] WhatsApp intake: channel adapter over a generic intake core
+> The [[Roadmap]] note-intake work gets its first concrete channel: WhatsApp. Kept generic on purpose (see the 2026-07-11 "intake generic" doc pass) so WhatsApp is one `channel` value on a shared intake + triage + review path, not bespoke plumbing. Decisions, all dated today:
+> - **Transport: Twilio WhatsApp.** Legit (official API underneath) and running in minutes via the sandbox, versus Meta Cloud API's up-front bureaucracy or the ToS-violating unofficial libraries.
+> - **Project routing: AI infers the project** from message text against the project list. Zero effort for senders; leans on the review step to catch misfiles.
+> - **Senders: open to anyone (prototype only).** No phone whitelist yet; capture the raw number as source. Gate later when [[Authentication & Roles]] lands (map phone -> `Person`).
+> - **Review flow: auto-create the task, flagged `reviewed = false`.** Task appears immediately, filterable as unreviewed, rather than sitting in a separate approval queue. Wrong AI guesses land in the tracker until cleaned up; acceptable for a trusted internal team.
+> - **Bot replies to confirm each task** (free-form within Twilio's 24h window, no template). Sender sees a misroute early.
+> - **Voice notes: phase 2.** Ship text intake first; add transcription (fetch OGG/Opus -> STT) into the same triage path afterward.
+> - **Triage model: Claude Haiku 4.5** planned (cheap classification/extraction, fast enough to reply inside the webhook timeout).
+
+> [!note] Hosting + infra stack locked (drives Phase 0)
+> WhatsApp needs a public HTTPS webhook, which forces deploy + the [[Roadmap]] "team-ready" work earlier than planned.
+> - **Host: Vercel.** Serverless, so no persistent SQLite file and no local `uploads/` disk survive; both must move.
+> - **Database: Supabase Postgres.** Prod project + a separate free dev project (Postgres everywhere, one schema, no Docker). Prisma needs the pooled URL (`DATABASE_URL`, port 6543) at runtime and the direct URL (`DIRECT_URL`, port 5432) for migrations.
+> - **Attachments: Supabase Storage** (S3-compatible), chosen over Vercel Blob to keep DB + files in one provider. `Project.tags` stays a JSON **string** on Postgres (no code churn to `parseTags`).
+
+- **Prod reuses the single dev Supabase project (prototype).** Vercel and local dev share one Supabase project (DB + `attachments` bucket) for now, so local seeding/testing mutates live data. Accepted for an early prototype with no auth; split into a separate prod project before real use. See [[Roadmap]] Phase 2.
+- **Storage abstraction shipped (Phase 0, code side).** `src/lib/storage/` now fronts attachment bytes: a `StorageAdapter` interface with `local` (on-disk `./uploads`, dev default) and `supabase` adapters, selected by `STORAGE_DRIVER`. The four attachment routes call `getStorage()` instead of `fs`. `storedName` doubles as the object key. Verified locally end-to-end (upload/download/delete). See [[Technical Architecture]] and [[Attachments]]. Supersedes part of the 2026-07-08 "local disk upload" decision (still the dev default; prod is Supabase).
+
 ## 2026-07-09
 
 > [!note] Dark mode moved to a `.dark` class strategy + manual toggle

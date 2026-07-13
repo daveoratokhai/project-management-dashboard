@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { unlink } from "fs/promises";
-import path from "path";
 import { prisma } from "@/lib/prisma";
 import { isStatusVariant, TAG_KEYS, type TagKey } from "@/lib/projects";
-import { UPLOAD_DIR } from "@/lib/uploads";
+import { getStorage } from "@/lib/storage";
 import type { Prisma } from "@prisma/client";
 
 export const runtime = "nodejs";
@@ -71,9 +69,10 @@ export async function DELETE(
   } catch {
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
+  const storage = getStorage();
   await Promise.all(
     attachments.map((att) =>
-      unlink(path.join(UPLOAD_DIR, att.storedName)).catch(() => {
+      storage.delete(att.storedName).catch(() => {
         // File already gone; the DB row was removed by the cascade.
       }),
     ),

@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readFile } from "fs/promises";
-import path from "path";
 import { prisma } from "@/lib/prisma";
-import { UPLOAD_DIR } from "@/lib/uploads";
+import { getStorage } from "@/lib/storage";
 
 export const runtime = "nodejs";
 
@@ -18,7 +16,7 @@ export async function GET(
   }
 
   try {
-    const buf = await readFile(path.join(UPLOAD_DIR, att.storedName));
+    const buf = await getStorage().get(att.storedName);
     return new NextResponse(new Uint8Array(buf), {
       headers: {
         "Content-Type": att.mimeType || "application/octet-stream",
@@ -27,6 +25,6 @@ export async function GET(
       },
     });
   } catch {
-    return NextResponse.json({ error: "File missing on disk" }, { status: 410 });
+    return NextResponse.json({ error: "File missing in storage" }, { status: 410 });
   }
 }

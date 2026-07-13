@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { unlink } from "fs/promises";
-import path from "path";
 import { prisma } from "@/lib/prisma";
-import { UPLOAD_DIR } from "@/lib/uploads";
+import { getStorage } from "@/lib/storage";
 
 export const runtime = "nodejs";
 
@@ -17,9 +15,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  await unlink(path.join(UPLOAD_DIR, att.storedName)).catch(() => {
-    // File already gone; still remove the row.
-  });
+  await getStorage().delete(att.storedName);
   await prisma.attachment.delete({ where: { id } });
 
   return NextResponse.json({ ok: true });

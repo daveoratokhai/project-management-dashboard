@@ -51,18 +51,25 @@ See [[Authentication & Roles]].
 - [ ] Gate API routes + hide UI actions by role
 - [ ] Link `Person` records to user accounts
 
-## ⬜ Phase 2 — Team-ready
+## 🔄 Phase 2 — Team-ready (Phase 0 of WhatsApp intake; started 2026-07-13)
 
-- [ ] Decide single-user vs shared; if shared, move SQLite → Postgres
-- [ ] Deploy
-- [ ] Upgrade [[Attachments]] to cloud storage (S3/R2) if needed
+Pulled forward because WhatsApp intake needs a public webhook, so deploy + Postgres + cloud storage all land here. Stack: **Vercel** host, **Supabase** Postgres + Storage (see [[Decision Log]] 2026-07-13).
 
-## ⬜ Phase 3 — Note intake
+- [x] Storage abstraction: `StorageAdapter` + local/supabase adapters, `STORAGE_DRIVER` (`src/lib/storage/`); attachment routes off `fs`. Verified locally.
+- [x] SQLite → Supabase Postgres: datasource flipped (`postgresql` + `directUrl`), migration history reset to a fresh Postgres `init`, re-seeded. Verified against the Supabase dev project.
+- [x] `STORAGE_DRIVER=supabase` + private `attachments` bucket (25 MB cap). Upload/download/delete verified against Supabase Storage end-to-end.
+- [ ] Deploy to Vercel; wire env vars (decide: separate prod Supabase project vs reuse the dev one for the prototype).
 
-- [ ] Lightweight note-capture UI (inbox / intake table)
+## ⬜ Phase 3 — WhatsApp intake (text)
 
-## ⬜ Phase 4 — AI auto-sort
+- [ ] `IntakeMessage` model (channel-agnostic) + `ProjectTask.source`/`reviewed`/`intakeMessageId`
+- [ ] Twilio sandbox; webhook `POST /api/intake/whatsapp/webhook` with signature verification
+- [ ] Claude (Haiku 4.5) triage: infer project + title + assignee, with a low-confidence fallback bucket
+- [ ] Auto-create task flagged `reviewed = false`; TwiML confirmation reply
+- [ ] Review surface: unreviewed badge + filter on the task list
 
-- [ ] LLM triage of freeform notes into structured records
-- [ ] Human-review step for mis-sorts
-- [ ] Confidence / fallback handling
+## ⬜ Phase 4 — WhatsApp intake (voice) + hardening
+
+- [ ] Voice notes: fetch OGG/Opus media → transcribe → same triage path
+- [ ] Phone whitelist → `Person` mapping (with [[Authentication & Roles]])
+- [ ] Confidence / fallback tuning

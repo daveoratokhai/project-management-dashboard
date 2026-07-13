@@ -13,7 +13,7 @@ Stack, data model, API, file map, and gotchas. Linked from [[Home]]. Design deta
 
 - Next.js 16.2 (App Router, Turbopack), React 19, TypeScript
 - Tailwind CSS v4
-- Prisma 6 ORM + SQLite (`prisma/dev.db`)
+- Prisma 6 ORM + SQLite (`prisma/dev.db`) — Postgres (Supabase) cutover in progress, see [[Roadmap]] and [[Decision Log]] 2026-07-13
 - shadcn/ui (new-york, neutral) + Radix primitives, framer-motion, class-variance-authority, lucide-react, tw-animate-css, clsx + tailwind-merge
 - next-themes for the manual Light / Dark / System toggle (see [[Theme Toggle]])
 
@@ -40,7 +40,8 @@ Stack, data model, API, file map, and gotchas. Linked from [[Home]]. Design deta
 - `prisma/seed.mjs` — idempotent (skips if projects exist). Seeds 5 people + 4 projects. Run `node prisma/seed.mjs`.
 - `src/lib/prisma.ts` — singleton PrismaClient (hot-reload safe).
 - `src/lib/projects.ts` — **pure** constants/types/helpers (no Prisma; safe for client + server): `STATUS_*`, `TASK_*`, `TAGS`, `formatDate`/`formatSize`, `parseTags`, `attachmentType`, `Serialized*` prop types.
-- `src/lib/uploads.ts` — `UPLOAD_DIR` (= `./uploads`).
+- `src/lib/uploads.ts` — `UPLOAD_DIR` (= `./uploads`); used by the local storage adapter.
+- `src/lib/storage/` — attachment-bytes abstraction (added 2026-07-13). `types.ts` (`StorageAdapter`: `put`/`get`/`delete`), `local.ts` (on-disk `./uploads`, dev default), `supabase.ts` (Supabase Storage, prod), `index.ts` (`getStorage()`, picks adapter from `STORAGE_DRIVER`). The four attachment routes call `getStorage()`; `Attachment.storedName` is the object key. See [[Attachments]].
 - `src/app/layout.tsx` — root layout; nav has the brand (links to `/projects`) and the theme toggle. `suppressHydrationWarning` on `<html>` is required by next-themes.
 - `src/components/theme-provider.tsx` / `theme-toggle.tsx` — **client**; next-themes wrapper + the nav Light / Dark / System control. See [[Theme Toggle]].
 - `src/app/page.tsx` — redirects `/` → `/projects`.
@@ -77,6 +78,7 @@ Stack, data model, API, file map, and gotchas. Linked from [[Home]]. Design deta
 - **Tailwind v4 default border color is `currentColor`, not gray.** A bare `border` / `border-b` (no color) renders as the opaque text color — harsh in dark mode. Always pair with a token, e.g. `border-border`. This bit the projects table borders (fixed 2026-07-08); see [[Design & Style]].
 - **`react-hooks/set-state-in-effect` (eslint-config-next 16) forbids seeding form state in a `useEffect(open)`.** Pattern used instead: put the form state in a child component rendered inside `DialogContent`; Radix unmounts it on close, so each open mounts fresh state from props (see `task-dialog.tsx`, `project-edit-dialog.tsx`). For prop-driven re-sync (Kanban columns), adjust state during render behind a `prevTasks !== tasks` check (`task-board.tsx`).
 - `.env`, `prisma/dev.db`, and `uploads/*` are gitignored.
+- **Prisma on Vercel:** the client is not regenerated on Vercel's cached installs, so `package.json` has `"postinstall": "prisma generate"`. Without it, deploys fail at runtime with an outdated-client error. `DATABASE_URL` uses the Supabase transaction pooler (6543, `pgbouncer=true`) which is correct for serverless; `DIRECT_URL` (5432) is migrate-only. Migrations are applied out-of-band (`prisma migrate deploy` against the DB), not during the Vercel build.
 
 ## Commands
 

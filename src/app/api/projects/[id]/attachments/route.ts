@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
-import { UPLOAD_DIR } from "@/lib/uploads";
+import { getStorage } from "@/lib/storage";
 
 export const runtime = "nodejs";
 
@@ -33,9 +31,9 @@ export async function POST(
   const bytes = Buffer.from(await file.arrayBuffer());
   const safeBase = file.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-100);
   const storedName = `${randomUUID()}-${safeBase}`;
+  const contentType = file.type || "application/octet-stream";
 
-  await mkdir(UPLOAD_DIR, { recursive: true });
-  await writeFile(path.join(UPLOAD_DIR, storedName), bytes);
+  await getStorage().put(storedName, bytes, contentType);
 
   const attachment = await prisma.attachment.create({
     data: {
@@ -43,7 +41,7 @@ export async function POST(
       filename: file.name,
       storedName,
       size: bytes.length,
-      mimeType: file.type || "application/octet-stream",
+      mimeType: contentType,
     },
   });
 

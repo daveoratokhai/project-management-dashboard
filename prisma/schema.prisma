@@ -1,14 +1,17 @@
 // Prisma schema for the project management dashboard.
-// SQLite for the MVP. To move to Postgres later, change `provider` to
-// "postgresql" and point DATABASE_URL at a Postgres instance.
+// Postgres (Supabase). DATABASE_URL is the transaction-mode pooler used at
+// runtime; DIRECT_URL is the session-mode pooler used by prisma migrate.
+// `Project.tags` stays a JSON-encoded String (parsed via parseTags) rather
+// than a native Json column, to avoid churning the app code.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // A project shown on the dashboard and its detail page.
