@@ -58,15 +58,18 @@ Pulled forward because WhatsApp intake needs a public webhook, so deploy + Postg
 - [x] Storage abstraction: `StorageAdapter` + local/supabase adapters, `STORAGE_DRIVER` (`src/lib/storage/`); attachment routes off `fs`. Verified locally.
 - [x] SQLite → Supabase Postgres: datasource flipped (`postgresql` + `directUrl`), migration history reset to a fresh Postgres `init`, re-seeded. Verified against the Supabase dev project.
 - [x] `STORAGE_DRIVER=supabase` + private `attachments` bucket (25 MB cap). Upload/download/delete verified against Supabase Storage end-to-end.
-- [ ] Deploy to Vercel; wire env vars (decide: separate prod Supabase project vs reuse the dev one for the prototype).
+- [x] Deploy to Vercel; env vars wired. Live at `project-management-dashboard-liart.vercel.app` (Vercel Authentication disabled; prod reuses the one Supabase project). Seed data cleared to an empty slate (5 seed `Person` rows kept). **Phase 0 / team-ready complete.**
 
-## ⬜ Phase 3 — WhatsApp intake (text)
+## 🔄 Phase 3 — WhatsApp intake (text) (started 2026-07-14)
 
-- [ ] `IntakeMessage` model (channel-agnostic) + `ProjectTask.source`/`reviewed`/`intakeMessageId`
-- [ ] Twilio sandbox; webhook `POST /api/intake/whatsapp/webhook` with signature verification
-- [ ] Claude (Haiku 4.5) triage: infer project + title + assignee, with a low-confidence fallback bucket
-- [ ] Auto-create task flagged `reviewed = false`; TwiML confirmation reply
-- [ ] Review surface: unreviewed badge + filter on the task list
+- [x] `IntakeMessage` model (channel-agnostic) + `ProjectTask.source`/`reviewed`/`intakeMessageId` (migration `intake_messages`, applied to live DB)
+- [x] Webhook `POST /api/intake/whatsapp/webhook`: Twilio signature verification, TwiML reply. Verified locally (bad sig -> 403, good sig -> 200 TwiML, triage failure -> graceful apology).
+- [x] Triage (`src/lib/intake/triage.ts`): OpenAI `gpt-4o-mini` structured outputs -> `{projectId|null, title, category, confidence}`; low confidence / no match -> `null`. (Switched from Claude Haiku to OpenAI per user preference, 2026-07-14.)
+- [x] Ingest (`src/lib/intake/ingest.ts`): auto-creates task flagged `reviewed = false`, links `intakeMessageId`; unrouted notes go to an auto-created "Inbox (unsorted)" project. Assignee left empty (senders anonymous).
+- [x] Triage accuracy test: 6 sample notes routed correctly (bugs->right service, feature->marketing, vague->Inbox null) with sensible titles/categories/confidence. Verified via a temporary dev route against real OpenAI, 2026-07-14.
+- [x] Review surface: amber `UnreviewedBadge` (with source) on unreviewed tasks in both List + Board, an "N to review" filter chip, and a one-click approve (`PATCH reviewed:true`). `SerializedTask` gained `source`/`reviewed`; task PATCH route accepts `reviewed`. Verified end-to-end (badge shows only on AI tasks, approve flips the flag, badge clears).
+- [x] Reassign a task to another project (fix AI misroutes): Project `<Select>` in the edit-task dialog; task PATCH accepts `projectId` (validates target, appends to its order). Detail page passes the full project list down. Verified (move -> 200, invalid -> 400).
+- [ ] Deploy + point the Twilio WhatsApp Sandbox webhook at the live URL; end-to-end test by texting the sandbox. (Needs `OPENAI_API_KEY` + `TWILIO_AUTH_TOKEN` in Vercel.)
 
 ## ⬜ Phase 4 — WhatsApp intake (voice) + hardening
 

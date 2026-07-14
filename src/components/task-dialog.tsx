@@ -26,10 +26,12 @@ import { TASK_STATUSES, type SerializedTask, type TaskStatus } from "@/lib/proje
 // current task props, with no effect-based re-seeding.
 function TaskForm({
   projectId,
+  projects,
   task,
   onOpenChange,
 }: {
   projectId: string;
+  projects: { id: string; name: string }[];
   task?: SerializedTask | null;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -38,6 +40,7 @@ function TaskForm({
   const [category, setCategory] = useState(task?.category ?? "");
   const [status, setStatus] = useState<TaskStatus>(task?.status ?? "Pending");
   const [dueDate, setDueDate] = useState(task?.dueDate ?? "");
+  const [selectedProject, setSelectedProject] = useState(projectId);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -48,7 +51,9 @@ function TaskForm({
     }
     setSaving(true);
     setError("");
-    const payload = { title, category, status, dueDate };
+    const payload: Record<string, unknown> = { title, category, status, dueDate };
+    // On edit, include projectId only when the task is being reassigned.
+    if (task && selectedProject !== projectId) payload.projectId = selectedProject;
     const res = task
       ? await fetch(`/api/tasks/${task.id}`, {
           method: "PATCH",
@@ -82,6 +87,23 @@ function TaskForm({
             autoFocus
           />
         </div>
+        {task && projects.length > 1 && (
+          <div className="space-y-1.5">
+            <Label htmlFor="t-project">Project</Label>
+            <Select value={selectedProject} onValueChange={setSelectedProject}>
+              <SelectTrigger id="t-project">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {projects.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label htmlFor="t-cat">Category</Label>
@@ -133,11 +155,13 @@ function TaskForm({
 
 export function TaskDialog({
   projectId,
+  projects,
   task,
   open,
   onOpenChange,
 }: {
   projectId: string;
+  projects: { id: string; name: string }[];
   task?: SerializedTask | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -148,7 +172,12 @@ export function TaskDialog({
         <DialogHeader>
           <DialogTitle>{task ? "Edit task" : "Add task"}</DialogTitle>
         </DialogHeader>
-        <TaskForm projectId={projectId} task={task} onOpenChange={onOpenChange} />
+        <TaskForm
+          projectId={projectId}
+          projects={projects}
+          task={task}
+          onOpenChange={onOpenChange}
+        />
       </DialogContent>
     </Dialog>
   );

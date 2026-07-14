@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Calendar,
+  Check,
   Download,
   File as FileIcon,
   FileText,
@@ -38,7 +39,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { StatusBadge } from "@/components/status-badge";
+import { StatusBadge, UnreviewedBadge } from "@/components/status-badge";
 import { ProjectEditDialog } from "@/components/project-edit-dialog";
 import { TaskDialog } from "@/components/task-dialog";
 import { TaskBoard } from "@/components/task-board";
@@ -139,9 +140,11 @@ function Field({
 export function ProjectDetailView({
   project,
   people,
+  projects,
 }: {
   project: SerializedProject;
   people: SerializedAssignee[];
+  projects: { id: string; name: string }[];
 }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -151,6 +154,13 @@ export function ProjectDetailView({
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [taskView, setTaskView] = useState<"list" | "board">("list");
+  const [showUnreviewedOnly, setShowUnreviewedOnly] = useState(false);
+
+  const unreviewedCount = project.tasks.filter((t) => !t.reviewed).length;
+  const visibleTasks =
+    showUnreviewedOnly && unreviewedCount > 0
+      ? project.tasks.filter((t) => !t.reviewed)
+      : project.tasks;
 
   async function patchProject(body: Record<string, unknown>) {
     await fetch(`/api/projects/${project.id}`, {
@@ -403,6 +413,20 @@ export function ProjectDetailView({
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-foreground">Task List</h2>
           <div className="flex items-center gap-3">
+            {unreviewedCount > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowUnreviewedOnly((v) => !v)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
+                  showUnreviewedOnly
+                    ? "border-amber-600/50 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                    : "border-border text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {unreviewedCount} to review
+              </button>
+            )}
             <div className="inline-flex rounded-md border border-border p-0.5">
               <button
                 type="button"
@@ -443,7 +467,7 @@ export function ProjectDetailView({
         </div>
 
         {taskView === "board" ? (
-          <TaskBoard tasks={project.tasks} />
+          <TaskBoard tasks={visibleTasks} />
         ) : (
         <Table>
           <TableHeader>
@@ -457,11 +481,16 @@ export function ProjectDetailView({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {project.tasks.length > 0 ? (
-              project.tasks.map((t, i) => (
+            {visibleTasks.length > 0 ? (
+              visibleTasks.map((t, i) => (
                 <TableRow key={t.id}>
                   <TableCell className="text-muted-foreground">{i + 1}</TableCell>
-                  <TableCell className="font-medium text-foreground">{t.title}</TableCell>
+                  <TableCell className="font-medium text-foreground">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span>{t.title}</span>
+                      {!t.reviewed && <UnreviewedBadge source={t.source} />}
+                    </div>
+                  </TableCell>
                   <TableCell className="text-muted-foreground">
                     {t.category || "-"}
                   </TableCell>
@@ -479,6 +508,17 @@ export function ProjectDetailView({
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-end gap-1">
+                      {!t.reviewed && (
+                        <button
+                          type="button"
+                          aria-label="Approve task"
+                          title="Mark reviewed"
+                          onClick={() => patchTask(t.id, { reviewed: true })}
+                          className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-green-600"
+                        >
+                          <Check className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                       <button
                         type="button"
                         aria-label="Edit task"
@@ -505,7 +545,9 @@ export function ProjectDetailView({
             ) : (
               <TableRow>
                 <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                  No tasks yet. Add the first one.
+                  {showUnreviewedOnly
+                    ? "No unreviewed tasks."
+                    : "No tasks yet. Add the first one."}
                 </TableCell>
               </TableRow>
             )}
@@ -522,6 +564,7 @@ export function ProjectDetailView({
       />
       <TaskDialog
         projectId={project.id}
+        projects={projects}
         task={editingTask}
         open={taskDialogOpen}
         onOpenChange={setTaskDialogOpen}

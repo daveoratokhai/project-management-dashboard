@@ -15,6 +15,7 @@ import {
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
+import { UnreviewedBadge } from "@/components/status-badge";
 import {
   formatDate,
   TASK_TONE,
@@ -53,6 +54,11 @@ function Card({ task }: { task: SerializedTask }) {
         />
         <div className="min-w-0">
           <p className="text-sm font-medium text-foreground">{task.title}</p>
+          {!task.reviewed && (
+            <div className="mt-1.5">
+              <UnreviewedBadge source={task.source} />
+            </div>
+          )}
           <div className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
             {task.category && <span>{task.category}</span>}
             {task.dueDate && <span>{formatDate(task.dueDate)}</span>}

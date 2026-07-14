@@ -15,6 +15,34 @@ const toneDot: Record<Tone, string> = {
   gray: "bg-muted-foreground",
 };
 
+// Human-readable label for a task's intake source.
+function sourceLabel(source: string): string {
+  if (source === "whatsapp") return "WhatsApp";
+  return source;
+}
+
+// Amber pill marking an AI-created task that a human has not confirmed yet.
+// Shows where it came from when the source isn't a manual entry.
+export function UnreviewedBadge({
+  source,
+  className,
+}: {
+  source?: string;
+  className?: string;
+}) {
+  const via = source && source !== "manual" ? ` · ${sourceLabel(source)}` : "";
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-md border border-amber-600/40 px-2 py-0.5 text-[11px] font-medium text-amber-600 dark:text-amber-400",
+        className,
+      )}
+    >
+      Unreviewed{via}
+    </span>
+  );
+}
+
 export function StatusBadge({
   text,
   tone,

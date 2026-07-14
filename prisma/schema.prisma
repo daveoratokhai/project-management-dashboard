@@ -66,16 +66,52 @@ model Attachment {
 
 // A row in a project's task list.
 // `status` is one of: Completed | In Progress | Pending.
+// `source` records where the task came from: "manual" (created in the UI) or
+// a channel like "whatsapp" (created by AI intake). `reviewed` is false for
+// AI-created tasks until a human confirms them; manual tasks default true.
 model ProjectTask {
-  id        String   @id @default(cuid())
-  projectId String
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  title     String
-  category  String   @default("")
-  status    String   @default("Pending")
-  dueDate   String   @default("")
-  order     Int      @default(0)
-  createdAt DateTime @default(now())
+  id              String         @id @default(cuid())
+  projectId       String
+  project         Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title           String
+  category        String         @default("")
+  status          String         @default("Pending")
+  dueDate         String         @default("")
+  order           Int            @default(0)
+  source          String         @default("manual")
+  reviewed        Boolean        @default(true)
+  intakeMessageId String?        @unique
+  intakeMessage   IntakeMessage? @relation(fields: [intakeMessageId], references: [id], onDelete: SetNull)
+  createdAt       DateTime       @default(now())
 
   @@index([projectId, order])
+  @@index([reviewed])
+}
+
+// A raw inbound note captured from an intake channel (WhatsApp for now),
+// before/around AI triage. Channel-agnostic so email or a web form can reuse
+// the same triage + review path. The resulting task links back via
+// `ProjectTask.intakeMessageId`.
+// - `channel`: "whatsapp" | (future: "email" | "web")
+// - `rawFrom`: sender identity (WhatsApp phone number)
+// - `mediaJson`: JSON array of media references (voice notes; phase 4)
+// - `transcript`: speech-to-text output (phase 4; "" for text messages)
+// - `aiProjectId`: the project the LLM inferred (null = low confidence / Unsorted)
+// - `aiConfidence`: 0..1 from the triage step
+// - `status`: "created" (task made) | "failed" (triage/creation errored)
+model IntakeMessage {
+  id           String       @id @default(cuid())
+  channel      String       @default("whatsapp")
+  rawFrom      String       @default("")
+  rawBody      String       @default("")
+  mediaJson    String       @default("[]")
+  transcript   String       @default("")
+  aiProjectId  String?
+  aiConfidence Float?
+  status       String       @default("created")
+  createdAt    DateTime     @default(now())
+
+  task         ProjectTask?
+
+  @@index([channel, createdAt])
 }

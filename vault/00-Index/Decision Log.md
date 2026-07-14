@@ -9,6 +9,11 @@ updated: 2026-07-09
 
 Dated decisions and the reasoning behind them. Newest first. Linked from [[Home]].
 
+## 2026-07-14
+
+> [!note] Intake triage uses OpenAI, not Claude
+> The [[Roadmap]] Phase 3 triage step calls **OpenAI `gpt-4o-mini`** (structured outputs via `zodResponseFormat`, `openai` SDK) instead of Claude Haiku. User preference (2026-07-14). The two are equivalent for this short classify-and-extract task; the swap is isolated to `src/lib/intake/triage.ts` (webhook, ingest, schema, review flow are provider-agnostic and unchanged). Env var is `OPENAI_API_KEY`; `@anthropic-ai/sdk` was removed. Note: the rest of the project's docs/model references remain Claude-oriented (cosmetic only). Reversible one-file change if we switch back. See [[Technical Architecture]].
+
 ## 2026-07-13
 
 > [!note] WhatsApp intake: channel adapter over a generic intake core

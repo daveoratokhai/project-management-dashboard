@@ -22,6 +22,23 @@ export async function PATCH(
   if (typeof body?.category === "string") data.category = body.category;
   if (typeof body?.dueDate === "string") data.dueDate = body.dueDate;
   if (isTaskStatus(body?.status)) data.status = body.status;
+  if (typeof body?.reviewed === "boolean") data.reviewed = body.reviewed;
+
+  // Reassign the task to a different project. Validate the target exists and
+  // append it to the end of that project's task order.
+  if (typeof body?.projectId === "string") {
+    const target = await prisma.project.findUnique({
+      where: { id: body.projectId },
+      select: { id: true },
+    });
+    if (!target) {
+      return NextResponse.json({ error: "Target project not found" }, { status: 400 });
+    }
+    data.project = { connect: { id: body.projectId } };
+    data.order = await prisma.projectTask.count({
+      where: { projectId: body.projectId },
+    });
+  }
 
   try {
     const task = await prisma.projectTask.update({ where: { id }, data });

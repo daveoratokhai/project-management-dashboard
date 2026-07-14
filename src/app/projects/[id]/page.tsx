@@ -17,7 +17,7 @@ export default async function ProjectDetailPage({
 }) {
   const { id } = await params;
 
-  const [row, people] = await Promise.all([
+  const [row, people, allProjects] = await Promise.all([
     prisma.project.findUnique({
       where: { id },
       include: {
@@ -27,6 +27,10 @@ export default async function ProjectDetailPage({
       },
     }),
     prisma.person.findMany({ orderBy: { name: "asc" } }),
+    prisma.project.findMany({
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
   ]);
 
   if (!row) notFound();
@@ -61,6 +65,8 @@ export default async function ProjectDetailPage({
       status: t.status as TaskStatus,
       dueDate: t.dueDate,
       order: t.order,
+      source: t.source,
+      reviewed: t.reviewed,
     })),
   };
 
@@ -71,5 +77,11 @@ export default async function ProjectDetailPage({
     fallback: p.fallback,
   }));
 
-  return <ProjectDetailView project={project} people={serializedPeople} />;
+  return (
+    <ProjectDetailView
+      project={project}
+      people={serializedPeople}
+      projects={allProjects}
+    />
+  );
 }

@@ -134,6 +134,10 @@ export type SerializedTask = {
   status: TaskStatus;
   dueDate: string;
   order: number;
+  // Where the task came from ("manual" | "whatsapp") and whether a human has
+  // confirmed an AI-created task. Manual tasks are reviewed by default.
+  source: string;
+  reviewed: boolean;
 };
 
 export type SerializedProject = {
