@@ -7,6 +7,7 @@ import {
   type TaskStatus,
 } from "@/lib/projects";
 import { ProjectDetailView } from "@/components/project-detail-view";
+import { getSessionProfile } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ export default async function ProjectDetailPage({
 }) {
   const { id } = await params;
 
-  const [row, people, allProjects] = await Promise.all([
+  const [row, people, allProjects, profile] = await Promise.all([
     prisma.project.findUnique({
       where: { id },
       include: {
@@ -31,6 +32,7 @@ export default async function ProjectDetailPage({
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
+    getSessionProfile(),
   ]);
 
   if (!row) notFound();
@@ -82,6 +84,7 @@ export default async function ProjectDetailPage({
       project={project}
       people={serializedPeople}
       projects={allProjects}
+      role={profile?.role ?? "Viewer"}
     />
   );
 }

@@ -55,6 +55,6 @@ WhatsApp msg -> Twilio -> POST /api/intake/whatsapp/webhook
 
 ## Not built / next
 
-- **Voice notes**: built (Phase 4) — audio/ogg -> transcribe -> same triage; reply echoes "Heard: ...". Transcription verified locally; live phone test pending.
+- **Voice notes**: shipped + verified live (Phase 4) — audio/ogg -> transcribe (`gpt-4o-mini-transcribe`) -> same triage; reply echoes "Heard: ...".
 - **Phone -> `Person` whitelist** (with [[Authentication & Roles]]).
 - **Create/manage projects by text** — surfaced in the live test (a "create a project" note became a task in Inbox). Not built.

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { NavUser } from "@/components/nav-user";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -41,7 +42,10 @@ export default function RootLayout({
               >
                 Project Dashboard
               </Link>
-              <ThemeToggle />
+              <div className="flex items-center gap-4">
+                <NavUser />
+                <ThemeToggle />
+              </div>
             </div>
           </nav>
           {children}

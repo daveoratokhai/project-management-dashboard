@@ -42,14 +42,17 @@ Shipped a working kanban board, then removed it (see [[Decision Log]]) when the 
 - [x] UX polish: status pill unified on the list ([[Design & Style]]), list/detail widths aligned, upload errors surfaced, better empty states
 - [x] Verified end-to-end in both themes via Playwright
 
-## ⬜ Phase Auth — Accounts & roles (NEXT)
+## 🔄 Phase Auth — Accounts & roles (built 2026-07-14, pending config)
 
-See [[Authentication & Roles]].
+See [[Authentication & Roles]]. Stack: **Supabase Auth + Google sign-in**, explicit email allowlist.
 
-- [ ] Authentication (login) + users table
-- [ ] Roles: PM/Admin (projects), Member (tasks / status / attachments), Viewer (read-only)
-- [ ] Gate API routes + hide UI actions by role
-- [ ] Link `Person` records to user accounts
+- [x] Auth via Supabase Auth (`@supabase/ssr`): `/login` (Google), `/auth/callback` (allowlist check + Profile upsert), `/auth/signout`; session refresh in `src/middleware.ts`.
+- [x] `Profile` model (id = auth uid, `role`, optional `Person` link). Roles: Admin / Member / Viewer (`src/lib/auth/roles.ts`).
+- [x] API routes gated by role (`requireRole`): projects + people = Admin, tasks + attachments = Member. Webhook stays public (middleware exempts `/api/intake`).
+- [x] UI hidden by role: New Project, project Edit/Delete/status = Admin; task/attachment actions = Member+; Viewer read-only. Nav shows user + role + sign out.
+- [x] Admin **Team** page (`/team`) + `PATCH /api/team/[id]` to change roles. Allowlist via `AUTH_ALLOWED_EMAILS`; admins via `AUTH_ADMIN_EMAILS`.
+- [ ] **Config pending:** Google OAuth app, Supabase Google provider, and env vars (`NEXT_PUBLIC_SUPABASE_URL/ANON_KEY`, `AUTH_ALLOWED_EMAILS`, `AUTH_ADMIN_EMAILS`). Auth stays dormant until the public Supabase env vars are set (middleware guard).
+- [ ] Link `Person` records to accounts (schema supports it; no UI yet).
 
 ## 🔄 Phase 2 — Team-ready (Phase 0 of WhatsApp intake; started 2026-07-13)
 
@@ -76,8 +79,8 @@ Full feature note: [[WhatsApp Intake]].
 > [!note] Observation from the live test
 > A user texted "Create a new project titled: Whatsapp project" expecting project creation; intake only ever creates **tasks**, so it became a task in Inbox. Possible future capability: create/manage projects via text. Not built.
 
-## 🔄 Phase 4 — WhatsApp intake (voice) + hardening (started 2026-07-14)
+## 🔄 Phase 4 — WhatsApp intake (voice) + hardening (voice shipped 2026-07-14)
 
-- [x] Voice notes: `src/lib/intake/transcribe.ts` fetches Twilio media (Basic auth via the `AccountSid` in the webhook payload, so **no new env var**) and transcribes with OpenAI `gpt-4o-mini-transcribe`; transcript feeds the same triage path. Webhook combines caption + transcript, stores `transcript`/`mediaJson` on `IntakeMessage`, and echoes "Heard: ..." in the reply. Transcription verified locally (say -> m4a -> exact text). **Live phone test pending after deploy.**
+- [x] Voice notes: `src/lib/intake/transcribe.ts` fetches Twilio media (Basic auth via the `AccountSid` in the webhook payload, so **no new env var**) and transcribes with OpenAI `gpt-4o-mini-transcribe`; transcript feeds the same triage path. Webhook combines caption + transcript, stores `transcript`/`mediaJson` on `IntakeMessage`, and echoes "Heard: ..." in the reply. **Verified live from a real phone (2026-07-14):** an audio/ogg voice note transcribed and became the task "Fix search bar feature" (conf 0.7, unreviewed), transcript + media stored.
 - [ ] Phone whitelist → `Person` mapping (with [[Authentication & Roles]])
 - [ ] Confidence / fallback tuning

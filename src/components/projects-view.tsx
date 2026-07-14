@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { CreateProjectDialog } from "@/components/create-project-dialog";
 import type { SerializedAssignee } from "@/lib/projects";
+import { can, type Role } from "@/lib/auth/roles";
 
 const allColumns: (keyof Project)[] = [
   "name",
@@ -30,9 +31,11 @@ const allColumns: (keyof Project)[] = [
 export function ProjectsView({
   projects,
   people,
+  role,
 }: {
   projects: Project[];
   people: SerializedAssignee[];
+  role: Role;
 }) {
   const router = useRouter();
   const [techFilter, setTechFilter] = useState("");
@@ -73,7 +76,7 @@ export function ProjectsView({
             technology or status, and toggle columns.
           </p>
         </div>
-        <CreateProjectDialog people={people} />
+        {can.manageProjects(role) && <CreateProjectDialog people={people} />}
       </header>
 
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">

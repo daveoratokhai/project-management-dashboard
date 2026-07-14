@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { getStorage } from "@/lib/storage";
+import { requireRole } from "@/lib/auth/session";
 
 export const runtime = "nodejs";
 
@@ -12,6 +13,9 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { error } = await requireRole("Member");
+  if (error) return error;
+
   const { id: projectId } = await params;
 
   const project = await prisma.project.findUnique({ where: { id: projectId } });

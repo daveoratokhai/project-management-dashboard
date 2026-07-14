@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isTaskStatus } from "@/lib/projects";
+import { requireRole } from "@/lib/auth/session";
 import type { Prisma } from "@prisma/client";
 
 // PATCH /api/tasks/:id - edit a task (anyone can edit tasks).
@@ -8,6 +9,9 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { error: authError } = await requireRole("Member");
+  if (authError) return authError;
+
   const { id } = await params;
   const body = await req.json().catch(() => null);
 
@@ -53,6 +57,9 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { error } = await requireRole("Member");
+  if (error) return error;
+
   const { id } = await params;
   try {
     await prisma.projectTask.delete({ where: { id } });

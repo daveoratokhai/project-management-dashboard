@@ -1,0 +1,83 @@
+/*
+  Site theme for the vault.
+
+  Mirrors the Project Dashboard's design tokens so the vault looks like the app.
+  Source of truth: `src/app/globals.css` (shadcn "neutral" palette in oklch,
+  Geist fonts, 0.625rem radius) plus the amber accent from the intake
+  "Unreviewed" badge. Keep this in sync if the site's tokens change.
+
+  Notes:
+  - Obsidian puts `.theme-dark` / `.theme-light` on <body>, mirroring the site's
+    `.dark` / `:root`. oklch is used directly (Obsidian's Chromium supports it).
+  - We target `body.theme-*` and use `!important` because Obsidian applies the
+    accent color and fonts as INLINE styles on <body>; a plain snippet rule
+    would lose to them.
+*/
+
+/* ---- Fonts, shape, accent (both schemes) ------------------------------ */
+body.theme-dark,
+body.theme-light {
+  --font-text: "Geist", "Geist Sans", ui-sans-serif, -apple-system, "Inter",
+    system-ui, sans-serif !important;
+  --font-interface: "Geist", "Geist Sans", ui-sans-serif, -apple-system,
+    "Inter", system-ui, sans-serif !important;
+  --font-monospace: "Geist Mono", ui-monospace, "SFMono-Regular", "Menlo",
+    monospace !important;
+
+  /* Site --radius = 0.625rem = 10px */
+  --radius-s: 6px !important;
+  --radius-m: 8px !important;
+  --radius-l: 10px !important;
+
+  /* Amber accent (matches the intake "Unreviewed" badge). Obsidian derives
+     links, tags, buttons, and active states from these HSL components. */
+  --accent-h: 38 !important;
+  --accent-s: 92% !important;
+  --accent-l: 50% !important;
+}
+
+/* ---- Dark (site .dark) ------------------------------------------------- */
+body.theme-dark {
+  --background-primary: oklch(0.145 0 0) !important;        /* --background */
+  --background-primary-alt: oklch(0.205 0 0) !important;    /* --card */
+  --background-secondary: oklch(0.205 0 0) !important;      /* sidebars */
+  --background-secondary-alt: oklch(0.269 0 0) !important;  /* --muted */
+
+  --text-normal: oklch(0.985 0 0) !important;               /* --foreground */
+  --text-muted: oklch(0.708 0 0) !important;                /* --muted-fg */
+  --text-faint: oklch(0.556 0 0) !important;
+  --text-on-accent: oklch(0.145 0 0) !important;
+
+  --background-modifier-border: oklch(1 0 0 / 10%) !important;        /* --border */
+  --background-modifier-border-hover: oklch(1 0 0 / 18%) !important;
+  --background-modifier-border-focus: oklch(1 0 0 / 28%) !important;
+
+  --interactive-normal: oklch(0.205 0 0) !important;
+  --interactive-hover: oklch(0.269 0 0) !important;
+
+  --text-accent: oklch(0.769 0.15 70) !important;
+  --text-accent-hover: oklch(0.82 0.15 70) !important;
+}
+
+/* ---- Light (site :root) ----------------------------------------------- */
+body.theme-light {
+  --background-primary: oklch(1 0 0) !important;            /* --background */
+  --background-primary-alt: oklch(0.97 0 0) !important;
+  --background-secondary: oklch(0.97 0 0) !important;
+  --background-secondary-alt: oklch(0.94 0 0) !important;
+
+  --text-normal: oklch(0.145 0 0) !important;               /* --foreground */
+  --text-muted: oklch(0.556 0 0) !important;                /* --muted-fg */
+  --text-faint: oklch(0.708 0 0) !important;
+  --text-on-accent: oklch(1 0 0) !important;
+
+  --background-modifier-border: oklch(0.922 0 0) !important;          /* --border */
+  --background-modifier-border-hover: oklch(0.86 0 0) !important;
+  --background-modifier-border-focus: oklch(0.78 0 0) !important;
+
+  --interactive-normal: oklch(0.97 0 0) !important;
+  --interactive-hover: oklch(0.94 0 0) !important;
+
+  --text-accent: oklch(0.62 0.16 55) !important;
+  --text-accent-hover: oklch(0.55 0.16 55) !important;
+}

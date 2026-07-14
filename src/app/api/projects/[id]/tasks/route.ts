@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isTaskStatus } from "@/lib/projects";
+import { requireRole } from "@/lib/auth/session";
 
 // POST /api/projects/:id/tasks - add a task to a project's task list.
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { error } = await requireRole("Member");
+  if (error) return error;
+
   const { id: projectId } = await params;
   const body = await req.json().catch(() => null);
   const title = typeof body?.title === "string" ? body.title.trim() : "";

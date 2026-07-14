@@ -40,6 +40,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { StatusBadge, UnreviewedBadge } from "@/components/status-badge";
+import { can, type Role } from "@/lib/auth/roles";
 import { ProjectEditDialog } from "@/components/project-edit-dialog";
 import { TaskDialog } from "@/components/task-dialog";
 import { TaskBoard } from "@/components/task-board";
@@ -141,12 +142,17 @@ export function ProjectDetailView({
   project,
   people,
   projects,
+  role,
 }: {
   project: SerializedProject;
   people: SerializedAssignee[];
   projects: { id: string; name: string }[];
+  role: Role;
 }) {
   const router = useRouter();
+  // Admins manage the project itself; Members+ edit tasks/attachments/status.
+  const canManage = can.manageProjects(role);
+  const canEdit = can.editTasks(role);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
@@ -243,31 +249,41 @@ export function ProjectDetailView({
         <h1 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
           {project.name}
         </h1>
-        <div className="flex shrink-0 gap-2">
-          <Button variant="outline" className="gap-2" onClick={() => setEditOpen(true)}>
-            <Pencil className="h-4 w-4" /> Edit
-          </Button>
-          <Button
-            variant="outline"
-            className="gap-2 text-red-600 hover:text-red-600 dark:text-red-400"
-            onClick={deleteProject}
-          >
-            <Trash2 className="h-4 w-4" /> Delete
-          </Button>
-        </div>
+        {canManage && (
+          <div className="flex shrink-0 gap-2">
+            <Button variant="outline" className="gap-2" onClick={() => setEditOpen(true)}>
+              <Pencil className="h-4 w-4" /> Edit
+            </Button>
+            <Button
+              variant="outline"
+              className="gap-2 text-red-600 hover:text-red-600 dark:text-red-400"
+              onClick={deleteProject}
+            >
+              <Trash2 className="h-4 w-4" /> Delete
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Meta grid */}
       <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
         <Field icon={<MoreHorizontal className="h-4 w-4" />} label="Status">
-          <StatusDropdown<StatusVariant>
-            value={project.status}
-            options={STATUS_VARIANTS}
-            label={(v) => STATUS_LABELS[v]}
-            tone={(v) => STATUS_TONE[v]}
-            showDot
-            onChange={(v) => patchProject({ status: v })}
-          />
+          {canManage ? (
+            <StatusDropdown<StatusVariant>
+              value={project.status}
+              options={STATUS_VARIANTS}
+              label={(v) => STATUS_LABELS[v]}
+              tone={(v) => STATUS_TONE[v]}
+              showDot
+              onChange={(v) => patchProject({ status: v })}
+            />
+          ) : (
+            <StatusBadge
+              text={STATUS_LABELS[project.status]}
+              tone={STATUS_TONE[project.status]}
+              showDot
+            />
+          )}
         </Field>
 
         <Field icon={<Users className="h-4 w-4" />} label="Assignee">
@@ -381,29 +397,33 @@ export function ProjectDetailView({
                   <p className="text-xs text-muted-foreground">{formatSize(file.size)}</p>
                 </div>
               </a>
-              <button
-                type="button"
-                aria-label="Delete attachment"
-                onClick={() => deleteAttachment(file.id)}
-                className="absolute right-2 top-2 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-red-600 group-hover:opacity-100"
-              >
-                <X className="h-4 w-4" />
-              </button>
+              {canEdit && (
+                <button
+                  type="button"
+                  aria-label="Delete attachment"
+                  onClick={() => deleteAttachment(file.id)}
+                  className="absolute right-2 top-2 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-red-600 group-hover:opacity-100"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
           ))}
-          <button
-            type="button"
-            aria-label="Upload attachment"
-            disabled={uploading}
-            onClick={() => fileInputRef.current?.click()}
-            className="flex min-h-[72px] items-center justify-center rounded-lg border border-dashed border-border text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground disabled:opacity-50"
-          >
-            {uploading ? (
-              <span className="text-xs">Uploading...</span>
-            ) : (
-              <Plus className="h-5 w-5" />
-            )}
-          </button>
+          {canEdit && (
+            <button
+              type="button"
+              aria-label="Upload attachment"
+              disabled={uploading}
+              onClick={() => fileInputRef.current?.click()}
+              className="flex min-h-[72px] items-center justify-center rounded-lg border border-dashed border-border text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground disabled:opacity-50"
+            >
+              {uploading ? (
+                <span className="text-xs">Uploading...</span>
+              ) : (
+                <Plus className="h-5 w-5" />
+              )}
+            </button>
+          )}
         </div>
         {uploadError && <p className="mt-3 text-sm text-red-500">{uploadError}</p>}
       </section>
@@ -453,16 +473,18 @@ export function ProjectDetailView({
                 <LayoutGrid className="h-3.5 w-3.5" /> Board
               </button>
             </div>
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={() => {
-                setEditingTask(null);
-                setTaskDialogOpen(true);
-              }}
-            >
-              <Plus className="h-4 w-4" /> Add task
-            </Button>
+            {canEdit && (
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() => {
+                  setEditingTask(null);
+                  setTaskDialogOpen(true);
+                }}
+              >
+                <Plus className="h-4 w-4" /> Add task
+              </Button>
+            )}
           </div>
         </div>
 
@@ -495,18 +517,23 @@ export function ProjectDetailView({
                     {t.category || "-"}
                   </TableCell>
                   <TableCell>
-                    <StatusDropdown<TaskStatus>
-                      value={t.status}
-                      options={TASK_STATUSES}
-                      label={(v) => v}
-                      tone={(v) => TASK_TONE[v]}
-                      onChange={(v) => patchTask(t.id, { status: v })}
-                    />
+                    {canEdit ? (
+                      <StatusDropdown<TaskStatus>
+                        value={t.status}
+                        options={TASK_STATUSES}
+                        label={(v) => v}
+                        tone={(v) => TASK_TONE[v]}
+                        onChange={(v) => patchTask(t.id, { status: v })}
+                      />
+                    ) : (
+                      <StatusBadge text={t.status} tone={TASK_TONE[t.status]} />
+                    )}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {formatDate(t.dueDate)}
                   </TableCell>
                   <TableCell>
+                    {canEdit && (
                     <div className="flex justify-end gap-1">
                       {!t.reviewed && (
                         <button
@@ -539,6 +566,7 @@ export function ProjectDetailView({
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
+                    )}
                   </TableCell>
                 </TableRow>
               ))

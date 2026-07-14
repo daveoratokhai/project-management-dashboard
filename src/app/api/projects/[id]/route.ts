@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isStatusVariant, TAG_KEYS, type TagKey } from "@/lib/projects";
 import { getStorage } from "@/lib/storage";
+import { requireRole } from "@/lib/auth/session";
 import type { Prisma } from "@prisma/client";
 
 export const runtime = "nodejs";
@@ -11,6 +12,9 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { error: authError } = await requireRole("Admin");
+  if (authError) return authError;
+
   const { id } = await params;
   const body = await req.json().catch(() => null);
   if (!body) {
@@ -60,6 +64,9 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { error } = await requireRole("Admin");
+  if (error) return error;
+
   const { id } = await params;
   const attachments = await prisma.attachment.findMany({
     where: { projectId: id },

@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isStatusVariant, TAG_KEYS, type TagKey } from "@/lib/projects";
+import { requireRole } from "@/lib/auth/session";
 
 // POST /api/projects - create a project. Only `name` is required; the rest can
-// be filled in on the detail page.
+// be filled in on the detail page. Admin only.
 export async function POST(req: NextRequest) {
+  const { error } = await requireRole("Admin");
+  if (error) return error;
+
   const body = await req.json().catch(() => null);
   const name = typeof body?.name === "string" ? body.name.trim() : "";
   if (!name) {

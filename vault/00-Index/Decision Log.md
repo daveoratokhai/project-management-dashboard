@@ -11,6 +11,12 @@ Dated decisions and the reasoning behind them. Newest first. Linked from [[Home]
 
 ## 2026-07-14
 
+> [!note] Auth: Supabase Auth + Google + email allowlist
+> Chose **Supabase Auth** (reuses existing infra, no hand-rolled password/session code) with **Google sign-in**, gated by an explicit **email allowlist** (`AUTH_ALLOWED_EMAILS`; admins via `AUTH_ADMIN_EMAILS`). Roles Admin/Member/Viewer stored on a `Profile` row (id = Supabase auth uid), upserted on login (admin emails -> Admin, else Viewer). Gating is server-side (`requireRole` on API routes + `src/middleware.ts`) with UI hiding on top. The WhatsApp webhook (`/api/intake/*`) is explicitly public. Middleware no-ops if the public Supabase env vars are unset, so a misconfigured deploy can't crash the webhook. See [[Authentication & Roles]].
+
+> [!note] Vault themed to match the app
+> The vault now uses the dashboard's look via an Obsidian CSS snippet `vault/.obsidian/snippets/site-theme.css` (enabled in `appearance.json`), mapping the site's tokens from `src/app/globals.css` (neutral shadcn palette in oklch, Geist fonts, 10px radius) plus the amber intake accent onto Obsidian's `--background-*` / `--text-*` / `--font-*` / `--accent-*`, for both dark and light. Keep the snippet in sync when the site's tokens change. Now a global rule (Second Brain protocol + vault-reminder hook): themed projects get a matching vault.
+
 > [!note] Intake triage uses OpenAI, not Claude
 > The [[Roadmap]] Phase 3 triage step calls **OpenAI `gpt-4o-mini`** (structured outputs via `zodResponseFormat`, `openai` SDK) instead of Claude Haiku. User preference (2026-07-14). The two are equivalent for this short classify-and-extract task; the swap is isolated to `src/lib/intake/triage.ts` (webhook, ingest, schema, review flow are provider-agnostic and unchanged). Env var is `OPENAI_API_KEY`; `@anthropic-ai/sdk` was removed. Note: the rest of the project's docs/model references remain Claude-oriented (cosmetic only). Reversible one-file change if we switch back. See [[Technical Architecture]].
 

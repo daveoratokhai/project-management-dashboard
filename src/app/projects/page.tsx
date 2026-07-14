@@ -2,16 +2,18 @@ import { prisma } from "@/lib/prisma";
 import { STATUS_LABELS, formatDate, type StatusVariant } from "@/lib/projects";
 import type { Project } from "@/components/ui/project-data-table";
 import { ProjectsView } from "@/components/projects-view";
+import { getSessionProfile } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProjectsPage() {
-  const [rows, people] = await Promise.all([
+  const [rows, people, profile] = await Promise.all([
     prisma.project.findMany({
       include: { assignees: true },
       orderBy: { createdAt: "desc" },
     }),
     prisma.person.findMany({ orderBy: { name: "asc" } }),
+    getSessionProfile(),
   ]);
 
   const projects: Project[] = rows.map((r) => {
@@ -39,5 +41,11 @@ export default async function ProjectsPage() {
     fallback: p.fallback,
   }));
 
-  return <ProjectsView projects={projects} people={serializedPeople} />;
+  return (
+    <ProjectsView
+      projects={projects}
+      people={serializedPeople}
+      role={profile?.role ?? "Viewer"}
+    />
+  );
 }
