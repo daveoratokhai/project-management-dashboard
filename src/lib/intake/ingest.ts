@@ -27,7 +27,9 @@ async function ensureInboxProject() {
 export type IngestInput = {
   channel: string; // "whatsapp"
   from: string; // sender identity (phone)
-  body: string; // note text
+  body: string; // text to triage (the transcript, for voice notes)
+  transcript?: string; // speech-to-text output, stored on the IntakeMessage
+  media?: { url: string; contentType: string }[]; // media references (voice)
 };
 
 export type IngestResult = {
@@ -44,6 +46,8 @@ export async function ingestNote({
   channel,
   from,
   body,
+  transcript,
+  media,
 }: IngestInput): Promise<IngestResult> {
   const allProjects = await prisma.project.findMany({
     select: { id: true, name: true, team: true, tech: true, description: true },
@@ -54,7 +58,13 @@ export async function ingestNote({
   );
 
   const intake = await prisma.intakeMessage.create({
-    data: { channel, rawFrom: from, rawBody: body },
+    data: {
+      channel,
+      rawFrom: from,
+      rawBody: body,
+      transcript: transcript ?? "",
+      mediaJson: JSON.stringify(media ?? []),
+    },
   });
 
   let triage;

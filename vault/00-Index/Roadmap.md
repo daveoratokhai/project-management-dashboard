@@ -60,7 +60,9 @@ Pulled forward because WhatsApp intake needs a public webhook, so deploy + Postg
 - [x] `STORAGE_DRIVER=supabase` + private `attachments` bucket (25 MB cap). Upload/download/delete verified against Supabase Storage end-to-end.
 - [x] Deploy to Vercel; env vars wired. Live at `project-management-dashboard-liart.vercel.app` (Vercel Authentication disabled; prod reuses the one Supabase project). Seed data cleared to an empty slate (5 seed `Person` rows kept). **Phase 0 / team-ready complete.**
 
-## 🔄 Phase 3 — WhatsApp intake (text) (started 2026-07-14)
+## ✅ Phase 3 — WhatsApp intake (text) (shipped 2026-07-14)
+
+Full feature note: [[WhatsApp Intake]].
 
 - [x] `IntakeMessage` model (channel-agnostic) + `ProjectTask.source`/`reviewed`/`intakeMessageId` (migration `intake_messages`, applied to live DB)
 - [x] Webhook `POST /api/intake/whatsapp/webhook`: Twilio signature verification, TwiML reply. Verified locally (bad sig -> 403, good sig -> 200 TwiML, triage failure -> graceful apology).
@@ -69,10 +71,13 @@ Pulled forward because WhatsApp intake needs a public webhook, so deploy + Postg
 - [x] Triage accuracy test: 6 sample notes routed correctly (bugs->right service, feature->marketing, vague->Inbox null) with sensible titles/categories/confidence. Verified via a temporary dev route against real OpenAI, 2026-07-14.
 - [x] Review surface: amber `UnreviewedBadge` (with source) on unreviewed tasks in both List + Board, an "N to review" filter chip, and a one-click approve (`PATCH reviewed:true`). `SerializedTask` gained `source`/`reviewed`; task PATCH route accepts `reviewed`. Verified end-to-end (badge shows only on AI tasks, approve flips the flag, badge clears).
 - [x] Reassign a task to another project (fix AI misroutes): Project `<Select>` in the edit-task dialog; task PATCH accepts `projectId` (validates target, appends to its order). Detail page passes the full project list down. Verified (move -> 200, invalid -> 400).
-- [ ] Deploy + point the Twilio WhatsApp Sandbox webhook at the live URL; end-to-end test by texting the sandbox. (Needs `OPENAI_API_KEY` + `TWILIO_AUTH_TOKEN` in Vercel.)
+- [x] Deployed; Twilio WhatsApp Sandbox webhook pointed at the live URL; `OPENAI_API_KEY` + `TWILIO_AUTH_TOKEN` set in Vercel. **Verified live end-to-end from a real phone (2026-07-14):** "Checkout page is broken" -> task on Test project (conf 0.6, unreviewed) with a WhatsApp confirmation reply; a vague note -> Inbox (unsorted). Live webhook rejects unsigned POSTs (403).
 
-## ⬜ Phase 4 — WhatsApp intake (voice) + hardening
+> [!note] Observation from the live test
+> A user texted "Create a new project titled: Whatsapp project" expecting project creation; intake only ever creates **tasks**, so it became a task in Inbox. Possible future capability: create/manage projects via text. Not built.
 
-- [ ] Voice notes: fetch OGG/Opus media → transcribe → same triage path
+## 🔄 Phase 4 — WhatsApp intake (voice) + hardening (started 2026-07-14)
+
+- [x] Voice notes: `src/lib/intake/transcribe.ts` fetches Twilio media (Basic auth via the `AccountSid` in the webhook payload, so **no new env var**) and transcribes with OpenAI `gpt-4o-mini-transcribe`; transcript feeds the same triage path. Webhook combines caption + transcript, stores `transcript`/`mediaJson` on `IntakeMessage`, and echoes "Heard: ..." in the reply. Transcription verified locally (say -> m4a -> exact text). **Live phone test pending after deploy.**
 - [ ] Phone whitelist → `Person` mapping (with [[Authentication & Roles]])
 - [ ] Confidence / fallback tuning

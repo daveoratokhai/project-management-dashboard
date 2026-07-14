@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import twilio from "twilio";
 import { ingestNote } from "@/lib/intake/ingest";
+import { transcribeTwilioAudio } from "@/lib/intake/transcribe";
 
 export const runtime = "nodejs";
 
@@ -56,25 +57,60 @@ export async function POST(req: NextRequest) {
   }
 
   const from = params.From ?? "";
-  const body = (params.Body ?? "").trim();
+  const caption = (params.Body ?? "").trim();
   const numMedia = parseInt(params.NumMedia ?? "0", 10) || 0;
+  const accountSid = params.AccountSid ?? "";
 
-  // Voice notes and other media are a later phase; ask for text for now.
-  if (numMedia > 0 && !body) {
-    return twiml(
-      "Thanks! Voice notes and attachments aren't supported yet, please send your note as text and I'll add it as a task.",
-    );
+  // For a voice note, transcribe the audio and use that as the note text
+  // (combined with any caption). Non-audio attachments aren't supported yet.
+  let triageBody = caption;
+  let transcript: string | undefined;
+  let media: { url: string; contentType: string }[] | undefined;
+
+  if (numMedia > 0) {
+    const mediaUrl = params.MediaUrl0 ?? "";
+    const mediaType = params.MediaContentType0 ?? "";
+    if (mediaType.startsWith("audio/") && mediaUrl && accountSid) {
+      try {
+        transcript = await transcribeTwilioAudio(mediaUrl, mediaType, {
+          accountSid,
+          authToken,
+        });
+      } catch (err) {
+        console.error("Transcription failed:", err);
+        return twiml(
+          "Sorry, I couldn't transcribe that voice note. Please try again, or send your note as text.",
+        );
+      }
+      media = [{ url: mediaUrl, contentType: mediaType }];
+      triageBody = [caption, transcript].filter(Boolean).join("\n").trim();
+      if (!triageBody) {
+        return twiml("I couldn't make out any words in that voice note. Please try again.");
+      }
+    } else if (!caption) {
+      return twiml(
+        "Attachments aren't supported yet. Please send your note as text or a voice note.",
+      );
+    }
   }
-  if (!body) {
+
+  if (!triageBody) {
     return twiml("Send a short note and I'll add it as a task to the right project.");
   }
 
   try {
-    const result = await ingestNote({ channel: "whatsapp", from, body });
+    const result = await ingestNote({
+      channel: "whatsapp",
+      from,
+      body: triageBody,
+      transcript,
+      media,
+    });
     const where = result.routed
       ? `to ${result.projectName}`
       : `to ${result.projectName} (couldn't tell which project, please review)`;
-    return twiml(`Added "${result.taskTitle}" ${where}. Marked unreviewed.`);
+    const heard = transcript ? `Heard: "${transcript}"\n` : "";
+    return twiml(`${heard}Added "${result.taskTitle}" ${where}. Marked unreviewed.`);
   } catch (err) {
     console.error("Intake failed:", err);
     return twiml(
